@@ -5,9 +5,10 @@ type User = {
   password: string;
 };
 
-function genUUID(): string {
+export function genUUID(): string {
   return uuidV4();
 }
+
 export const users: User[] = [
   { id: genUUID(), username: "Churros", password: "123456" },
   { id: genUUID(), username: "China", password: "456789" },
