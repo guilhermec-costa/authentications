@@ -50,6 +50,13 @@ export class JwtController {
       "/refreshToken",
       async (req: FastifyRequest, res: FastifyReply) => {
         const { refreshToken } = refreshTokenSchema.parse(req.body);
+        try {
+          return this.jwtService.refreshToken(refreshToken);
+        } catch (error) {
+          if (error instanceof Error) {
+            res.send(500).send(error.message);
+          }
+        }
       }
     );
   }
