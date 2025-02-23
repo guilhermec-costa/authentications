@@ -50,26 +50,6 @@ export class JwtController {
       "/refreshToken",
       async (req: FastifyRequest, res: FastifyReply) => {
         const { refreshToken } = refreshTokenSchema.parse(req.body);
-        try {
-          const decoded = jwt.verify(refreshToken, REFRESH_SECRET) as {} & {
-            userId: string;
-          };
-
-          const newTokens = {
-            accessToken: this.jwtService.genAccessToken({
-              userId: decoded.userId,
-            }),
-            refreshToken: this.jwtService.genRefreshToken({
-              userId: decoded.userId,
-            }),
-          };
-
-          return res.status(201).send(newTokens);
-        } catch (error) {
-          if (error instanceof jwt.TokenExpiredError) {
-            return res.status(401).send(error.message);
-          }
-        }
       }
     );
   }
