@@ -1,9 +1,10 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import jwt from "jsonwebtoken";
-import { ACCESS_SECRET, REFRESH_SECRET } from "../secrets";
-import { refreshTokenSchema, UserSchema } from "../schemas";
-import { mapUsersResponse, users } from "../db-users";
-import { genAccessToken, genRefreshToken } from "../jwt-utils";
+import { ACCESS_SECRET, REFRESH_SECRET } from "../../secrets";
+import { refreshTokenSchema } from "../schemas/refresh-token.schema";
+import { UserService } from "../../application/user.service";
+import { JWTService } from "../../application/jwt.service";
+import { LoginRequestSchema } from "../schemas/login-request.schema";
 
 /**
  *
@@ -16,30 +17,36 @@ import { genAccessToken, genRefreshToken } from "../jwt-utils";
  * E também pode ser usado para passagem de dados pela web
  */
 export class JwtController {
-  constructor(app: FastifyInstance) {
-    app.post(
+  constructor(
+    private readonly app: FastifyInstance,
+    private readonly jwtService: JWTService,
+    private readonly userService: UserService
+  ) {}
+
+  public bindRoutes() {
+    this.app.post(
       "/login/jwtAuth",
       async (req: FastifyRequest, res: FastifyReply) => {
         const { body, ...rest } = req;
 
-        const parsedBody = UserSchema.parse(body);
-        const user = users.find((u) => u.username === parsedBody.username);
-        if (!user) throw new Error("User not found");
-
-        const passwordMatches = user.password === parsedBody.password;
-        if (!passwordMatches) throw new Error("Password does not match");
+        const userData = LoginRequestSchema.parse(body);
+        const { isAuthenticated, user } = await this.userService.authenticate(
+          userData
+        );
+        if (!isAuthenticated || !user)
+          throw new Error("User is not authenticated");
 
         // SHA256(b64(header) + "." + b64(payload) + "." + b64(secret))
         const authTokens = {
-          accessToken: genAccessToken({ userId: user.id }),
-          refreshToken: genRefreshToken({ userId: user.id }),
+          accessToken: this.jwtService.genAccessToken({ userId: user._id }),
+          refreshToken: this.jwtService.genRefreshToken({ userId: user._id }),
         };
 
         res.status(201).send(authTokens);
       }
     );
 
-    app.post(
+    this.app.post(
       "/refreshToken",
       async (req: FastifyRequest, res: FastifyReply) => {
         const { refreshToken } = refreshTokenSchema.parse(req.body);
@@ -49,8 +56,12 @@ export class JwtController {
           };
 
           const newTokens = {
-            accessToken: genAccessToken({ userId: decoded.userId }),
-            refreshToken: genRefreshToken({ userId: decoded.userId }),
+            accessToken: this.jwtService.genAccessToken({
+              userId: decoded.userId,
+            }),
+            refreshToken: this.jwtService.genRefreshToken({
+              userId: decoded.userId,
+            }),
           };
 
           return res.status(201).send(newTokens);
@@ -61,19 +72,5 @@ export class JwtController {
         }
       }
     );
-
-    app.get("/users", async (req: FastifyRequest, res: FastifyReply) => {
-      const token = req.headers.authorization?.split("Bearer ")[1];
-      if (!token) return res.status(401).send({ data: "Not authorized" });
-
-      try {
-        const decoded = jwt.verify(token, ACCESS_SECRET);
-        return res.status(200).send({ data: mapUsersResponse() });
-      } catch (error) {
-        if (error instanceof jwt.TokenExpiredError) {
-          return res.status(401).send(error.message);
-        }
-      }
-    });
   }
 }

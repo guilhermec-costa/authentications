@@ -27,9 +27,11 @@ const oauth2Client = new google.auth.OAuth2({
 });
 
 export class OAuth2Controler {
-  constructor(app: FastifyInstance) {
+  constructor(private readonly app: FastifyInstance) {}
+
+  public bindRoutes() {
     // inicia o processo do oauth2
-    app.get("/google/oauth2", async (req, res) => {
+    this.app.get("/google/oauth2", async (req, res) => {
       const authUrl = oauth2Client.generateAuthUrl({
         access_type: "offline",
         scope: GOOGLE_OAUTH_SCOPES,
@@ -41,7 +43,7 @@ export class OAuth2Controler {
     });
 
     // Após o usuário consentir, será redirecionado para cá
-    app.get("/google/callback", async (req, res) => {
+    this.app.get("/google/callback", async (req, res) => {
       const { code } = req.query as {} & { code: string };
 
       try {
@@ -54,7 +56,7 @@ export class OAuth2Controler {
       }
     });
 
-    app.get("/getemailinfo", async (req, res) => {
+    this.app.get("/getemailinfo", async (req, res) => {
       const clientInfo = await oauth2Client.request({
         url: "https://www.googleapis.com/oauth2/v3/userinfo",
       });
