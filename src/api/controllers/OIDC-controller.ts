@@ -74,12 +74,21 @@ export class OIDCController {
           }
         );
 
-        console.log("Received tokens: ", tokens);
-        console.log(jwt.verify(tokens.access_token));
-        res.status(200).send(tokens);
+        res.status(200).send({ tokens });
       } catch (error) {
         console.error("Erro ao trocar código por token:", error);
         res.status(500).send("Erro ao autenticar.");
+      }
+    });
+
+    this.app.get("/google/openid/userinfo", async (req, res) => {
+      const auth = req.headers.authorization;
+
+      try {
+        const userInfo = jwt.decode(auth || "");
+        res.status(200).send({ data: userInfo });
+      } catch (error) {
+        res.status(400).send({ error: error });
       }
     });
   }
