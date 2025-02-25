@@ -23,6 +23,7 @@
     "googleapis": "^144.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.13.1",
+    "openid-client": "^6.3.3",
     "tsx": "^4.19.3",
     "uuid": "^11.1.0",
     "zod": "^3.24.2"

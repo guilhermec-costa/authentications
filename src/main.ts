@@ -8,6 +8,7 @@ import { UserController } from "./api/controllers/user.controller";
 import { UserService } from "./application/user.service";
 import { MongoService } from "./application/mongo.service";
 import { JWTService } from "./application/jwt.service";
+import { OIDCController } from "./api/controllers/OIDC-controller";
 
 (async function main() {
   const app = Fastify();
@@ -29,10 +30,12 @@ import { JWTService } from "./application/jwt.service";
   const jwtController = new JwtController(app, jwtService, userService);
   const oauth2Controller = new OAuth2Controler(app);
   const mfaController = new MFAController(app);
+  const oidcController = new OIDCController(app);
 
   userController.bindRoutes();
   jwtController.bindRoutes();
   oauth2Controller.bindRoutes();
+  oidcController.bindRoutes();
 
   app.listen({ port: 3000 }).then(() => {
     console.log("Server listen on port 3000");
