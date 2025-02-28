@@ -13,7 +13,7 @@ export class KeycloakController {
       disableSessionPlugin: true,
     };
 
-    this.app.register(keycloak, kcConfig);
+    // this.app.register(keycloak, kcConfig);
   }
 
   public bindRoutes() {

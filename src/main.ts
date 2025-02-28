@@ -9,6 +9,7 @@ import { MongoService } from "./application/mongo.service";
 import { JWTService } from "./application/jwt.service";
 import { OIDCController } from "./api/controllers/OIDC-controller";
 import { KeycloakController } from "./api/controllers/keycloak-controller";
+import { _2FAController } from "./api/controllers/_2fa-controller";
 
 (async function main() {
   const app = Fastify();
@@ -31,12 +32,14 @@ import { KeycloakController } from "./api/controllers/keycloak-controller";
   const oauth2Controller = new OAuth2Controler(app);
   const oidcController = new OIDCController(app);
   const keycloakController = new KeycloakController(app);
+  const _2faController = new _2FAController(app);
 
   userController.bindRoutes();
   jwtController.bindRoutes();
   oauth2Controller.bindRoutes();
   oidcController.bindRoutes();
   keycloakController.bindRoutes();
+  _2faController.bindRoutes();
 
   app.listen({ port: 3000 }).then(() => {
     console.log("Server listen on port 3000");
